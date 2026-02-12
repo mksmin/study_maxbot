@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -20,21 +23,57 @@ func main() {
 	defer stop()
 	defer fmt.Println("Stopping app")
 
-	api, _ := maxbot.New("")
+	if err := godotenv.Load(".env"); err != nil {
+		log.Printf("Warning: could not load .env file: %v", err)
+	}
+
+	api, _ := maxbot.New(os.Getenv("MAX_BOT_TOKEN"))
 
 	info, err := api.Bots.GetBot(ctx)
-	fmt.Printf("Get me: %#v %#v", info, err)
+	bot_info, _ := json.MarshalIndent(info, "", " ")
+	log.Println("Bot info:")
+	log.Println(string(bot_info))
+	log.Printf("Err %v", err)
 
 	for upd := range api.GetUpdates(ctx) {
-		switch upd := upd.(type) {
-		case *schemes.MessageCreatedUpdate:
+		switch u := upd.(type) {
+		case *schemes.BotStartedUpdate:
 			message := maxbot.NewMessage().
-				SetChat(upd.Message.Recipient.ChatId).
-				SetText("Hello from bot")
+				SetChat(u.ChatId).
+				SetText("Добро пожаловать в бота")
+
+			fmt.Printf("User %v from chat %v ", u.User, u.ChatId)
 
 			err := api.Messages.Send(ctx, message)
 			if err != nil {
 			}
+		case *schemes.MessageCreatedUpdate:
+			out := "bot прочитал текст: " + u.GetText()
+
+			switch u.GetCommand() {
+			case "/start":
+				out = "Команда: " + u.GetCommand()
+				message := maxbot.NewMessage().
+					SetUser(u.Message.Sender.UserId).
+					SetText(out)
+				err := api.Messages.Send(ctx, message)
+				if err != nil {
+				}
+			default:
+				userMessage := u.Message
+				b, _ := json.MarshalIndent(userMessage, "", "  ")
+				fmt.Println()
+				fmt.Println(fmt.Sprintf("Get message: %v", string(b)))
+
+				message := maxbot.NewMessage().
+					SetUser(userMessage.Sender.UserId).
+					Reply("Hello from bot", userMessage)
+
+				err := api.Messages.Send(ctx, message)
+				if err != nil {
+				}
+			}
+
 		}
 	}
 }
