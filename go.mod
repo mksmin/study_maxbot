@@ -4,6 +4,7 @@ go 1.25
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/max-messenger/max-bot-api-client-go v1.4.1 // indirect
