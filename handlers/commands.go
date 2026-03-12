@@ -2,15 +2,16 @@ package handlers
 
 import (
 	"context"
-	dp "study_bot_go/dispatcher"
+	"study_bot_go/dispatcher"
 	"study_bot_go/filters"
 
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
+	"github.com/rs/zerolog"
 )
 
-func CommandsRouter() *dp.Router {
-	r := dp.NewRouter()
+func CommandsRouter(logger zerolog.Logger) *dispatcher.Router {
+	r := dispatcher.NewRouter(logger)
 	r.Message(handleHelp, filters.Command("help"))
 	r.Message(handlePing, filters.Command("ping"))
 	return r
