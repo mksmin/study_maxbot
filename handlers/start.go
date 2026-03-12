@@ -5,18 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	dp "study_bot_go/dispatcher"
+	"study_bot_go/dispatcher"
 	"study_bot_go/filters"
 
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
+	"github.com/rs/zerolog"
 )
 
-func StartRouter() *dp.Router {
-	r := dp.NewRouter()
+func StartRouter(logger zerolog.Logger) *dispatcher.Router {
+	r := dispatcher.NewRouter(logger)
 	r.Message(handleStart, filters.Command("start"))
-	//r.Message(anyMessage)
-
 	return r
 }
 
