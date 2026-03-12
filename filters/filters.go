@@ -2,12 +2,12 @@ package filters
 
 import (
 	"strings"
-	"study_bot_go/dispatcher"
+	"study_bot_go/internal/bot"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
 
-func Command(name string) dispatcher.Filter {
+func Command(name string) bot.Filter {
 	return func(u *schemes.MessageCreatedUpdate) bool {
 		command := u.GetCommand()
 		if len(command) > 0 && command[0] == '/' {
@@ -18,13 +18,13 @@ func Command(name string) dispatcher.Filter {
 	}
 }
 
-func Text(target string) dispatcher.Filter {
+func Text(target string) bot.Filter {
 	return func(u *schemes.MessageCreatedUpdate) bool {
 		return u.GetText() == target
 	}
 }
 
-func Contains(substring string) dispatcher.Filter {
+func Contains(substring string) bot.Filter {
 	return func(u *schemes.MessageCreatedUpdate) bool {
 		return strings.Contains(u.GetText(), substring)
 	}
