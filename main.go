@@ -12,16 +12,17 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	dp "study_bot_go/dispatcher"
+	"study_bot_go/dispatcher"
 	"study_bot_go/handlers"
 )
 
 func main() {
-	log.Logger = log.Output(
+	logger := log.Output(
 		zerolog.ConsoleWriter{
 			Out:        os.Stderr,
 			TimeFormat: "15:04:05"},
 	)
+	log.Logger = logger
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
@@ -41,9 +42,10 @@ func main() {
 		log.Fatal().Err(err).Msg("API initialization failed")
 	}
 
-	dispatcher := dp.NewDispatcher()
-	dispatcher.IncludeRouter(handlers.StartRouter())
-	dispatcher.IncludeRouter(handlers.CommandsRouter())
+	disp := dispatcher.NewDispatcher(logger)
+
+	disp.IncludeRouter(handlers.StartRouter(logger))
+	disp.IncludeRouter(handlers.CommandsRouter(logger))
 
 	log.Info().Msg("Бот успешно запущен!")
 
@@ -51,20 +53,19 @@ func main() {
 		switch u := upd.(type) {
 		case *schemes.BotStartedUpdate:
 			log.Info().
-				Int64(
-					"chat_id",
-					u.ChatId,
-				).
+				Int64("chat_id", u.ChatId).
 				Msg("Bot started in chat")
+
 			msg := maxbot.NewMessage().
 				SetChat(u.ChatId).
 				SetText("Добро пожаловать!")
 			_ = api.Messages.Send(ctx, msg)
 
 		case *schemes.MessageCreatedUpdate:
-			if err := dispatcher.Handle(ctx, api, u); err != nil {
-				log.Error().Err(err).Msg("Ошибка в обработчике")
+			if err := disp.Handle(ctx, api, u); err != nil {
+				log.Error().Err(err).Msg("Ошибка при обработке сообщения")
 			}
 		}
 	}
+	log.Info().Msg("Завершение работы по сигналу...")
 }
